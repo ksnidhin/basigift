@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+REPO_DIR="$PWD"
+
 echo "======================================"
 echo " Daddy Noah Native Ubuntu Installer"
 echo "======================================"
@@ -19,11 +21,20 @@ curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr
 chmod a+rx /usr/local/bin/yt-dlp
 
 echo "[3/6] Installing Go (if needed)..."
-if ! command -v go &> /dev/null; then
+if ! command -v go &> /dev/null || ! /usr/local/go/bin/go version &> /dev/null; then
     GO_VERSION="1.22.4"
-    wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
-    rm -rf /usr/local/go && tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
-    rm go${GO_VERSION}.linux-amd64.tar.gz
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ]; then
+        GO_ARCH="amd64"
+    elif [ "$ARCH" = "aarch64" ]; then
+        GO_ARCH="arm64"
+    else
+        echo "Unsupported architecture: $ARCH"
+        exit 1
+    fi
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
+    rm -rf /usr/local/go && tar -C /usr/local -xzf "go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
+    rm "go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
     export PATH=$PATH:/usr/local/go/bin
 fi
 
@@ -34,9 +45,11 @@ sudo -u postgres psql -c "CREATE DATABASE daddynoah;" || true
 echo "[5/6] Building Daddy Noah..."
 export PATH=$PATH:/usr/local/go/bin
 mkdir -p /opt/DaddyNoah
+
+# Copy everything to the deployment directory
+cp -a "$REPO_DIR"/. /opt/DaddyNoah/
 cd /opt/DaddyNoah
-# Assuming the user cloned the repo here, or we copy it:
-cp -r $PWD/* /opt/DaddyNoah/ || true
+
 go mod tidy
 go build -o daddynoah .
 
@@ -49,7 +62,8 @@ echo "======================================"
 echo "Installation complete!"
 echo ""
 echo "Please configure your bot before starting:"
-echo "1. cp sample.env .env"
-echo "2. nano .env"
-echo "3. systemctl start daddynoah"
+echo "1. cd /opt/DaddyNoah"
+echo "2. cp sample.env .env"
+echo "3. nano .env"
+echo "4. sudo systemctl start daddynoah"
 echo "======================================"
