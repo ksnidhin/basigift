@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"ashokshau/tgmusic/src/utils"
+	"simmie/src/utils"
 	"sync"
 	"testing"
 )

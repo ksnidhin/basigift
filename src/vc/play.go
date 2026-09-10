@@ -1,8 +1,8 @@
 package vc
 
 import (
-	"ashokshau/tgmusic/src/core/cache"
-	"ashokshau/tgmusic/src/core/db"
+	"simmie/src/core/cache"
+	"simmie/src/core/db"
 	"context"
 	"errors"
 	"fmt"

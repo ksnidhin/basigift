@@ -1,16 +1,16 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package vc
 
 import (
-	"ashokshau/tgmusic/config"
-	"ashokshau/tgmusic/src/vc/sessions"
+	"simmie/config"
+	"simmie/src/vc/sessions"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"ashokshau/tgmusic/src/core/cache"
+	"simmie/src/core/cache"
 
 	td "github.com/AshokShau/gotdbot"
 	tg "github.com/amarnathcjd/gogram/telegram"

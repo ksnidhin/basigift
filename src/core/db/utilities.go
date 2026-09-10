@@ -1,9 +1,9 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package db
@@ -12,16 +12,15 @@ import (
 	"fmt"
 )
 
-// toKey converts an int64 ID into a string format suitable for use as a cache key.
+// toKey converts an int64 to a string key.
 func toKey(id int64) string {
 	return fmt.Sprintf("%d", id)
 }
 
-// contains checks if a given int64 slice contains a specific ID.
-// It returns true if the ID is found, and false otherwise.
-func contains(list []int64, id int64) bool {
-	for _, v := range list {
-		if v == id {
+// contains checks if a slice contains a specific int64 value.
+func contains(slice []int64, item int64) bool {
+	for _, a := range slice {
+		if a == item {
 			return true
 		}
 	}

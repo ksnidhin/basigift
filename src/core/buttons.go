@@ -1,16 +1,16 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package core
 
 import (
-	"ashokshau/tgmusic/config"
-	"ashokshau/tgmusic/src/utils"
+	"simmie/config"
+	"simmie/src/utils"
 	"fmt"
 
 	"github.com/AshokShau/gotdbot"
@@ -54,7 +54,7 @@ var DevsBtn = cb("Devs", "help_devs", gotdbot.ButtonStyleDefault{})
 var PlaylistBtn = cb("Playlist", "help_playlist", gotdbot.ButtonStyleDefault{})
 var AutoplayBtn = cb("Autoplay", "help_autoplay", gotdbot.ButtonStyleDefault{})
 
-var SourceCodeBtn = url("Source Code", "https://github.com/AshokShau/TgMusicBot", gotdbot.ButtonStylePrimary{})
+var SourceCodeBtn = url("Source Code", "https://github.com/Simmie/DaddyNoah", gotdbot.ButtonStylePrimary{})
 var channelBtn = url("Updates", config.SupportChannel, gotdbot.ButtonStyleDefault{})
 var groupBtn = url("Group", config.SupportGroup, gotdbot.ButtonStyleDefault{})
 

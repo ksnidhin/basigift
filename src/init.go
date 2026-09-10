@@ -1,17 +1,17 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package src
 
 import (
-	"ashokshau/tgmusic/config"
-	"ashokshau/tgmusic/src/core/db"
-	"ashokshau/tgmusic/src/vc"
+	"simmie/config"
+	"simmie/src/core/db"
+	"simmie/src/vc"
 
 	"github.com/AshokShau/gotdbot"
 )

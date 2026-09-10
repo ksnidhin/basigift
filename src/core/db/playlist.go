@@ -1,85 +1,89 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package db
 
 import (
-	"ashokshau/tgmusic/src/utils"
-	"context"
+	"simmie/src/utils"
 	"crypto/rand"
 	"fmt"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"github.com/jackc/pgx/v5"
 )
 
-// Song represents a single song in a playlist.
 type Song struct {
-	URL      string `json:"url" bson:"url"`
-	Name     string `json:"name" bson:"name"`
-	TrackID  string `json:"track_id" bson:"track_id"`
-	Duration int    `json:"duration" bson:"duration"`
-	Platform string `json:"platform" bson:"platform"`
+	URL      string `json:"url"`
+	Name     string `json:"name"`
+	TrackID  string `json:"track_id"`
+	Duration int    `json:"duration"`
+	Platform string `json:"platform"`
 }
 
-// Playlist represents a user's playlist.
 type Playlist struct {
-	ID     string `bson:"_id"`
-	Name   string `bson:"name"`
-	UserID int64  `bson:"user_id"`
-	Songs  []Song `bson:"songs"`
+	ID     string
+	Name   string
+	UserID int64
+	Songs  []Song
 }
 
-// generateUniquePlaylistID generates a unique ID for a playlist.
 func generateUniquePlaylistID() string {
 	b := make([]byte, 5)
 	_, _ = rand.Read(b)
 	return fmt.Sprintf("tgpl_%x", b)
 }
 
-// CreatePlaylist creates a new playlist for a user.
 func (db *Database) CreatePlaylist(name string, userID int64) (string, error) {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
 	id := generateUniquePlaylistID()
-	playlist := Playlist{
-		ID:     id,
-		Name:   name,
-		UserID: userID,
-		Songs:  []Song{},
-	}
-	_, err := db.playlistDB.InsertOne(ctx, playlist)
+	
+	_, err := db.Pool.Exec(ctx, "INSERT INTO playlists (id, name, user_id) VALUES ($1, $2, $3)", id, name, userID)
 	if err != nil {
 		return "", err
 	}
 	return id, nil
 }
 
-// GetPlaylist retrieves a playlist by its ID.
 func (db *Database) GetPlaylist(id string) (*Playlist, error) {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
 	var playlist Playlist
-	err := db.playlistDB.FindOne(ctx, bson.M{"_id": id}).Decode(&playlist)
+	err := db.Pool.QueryRow(ctx, "SELECT id, name, user_id FROM playlists WHERE id = $1", id).
+		Scan(&playlist.ID, &playlist.Name, &playlist.UserID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("playlist not found")
+		}
+		return nil, err
+	}
+
+	rows, err := db.Pool.Query(ctx, "SELECT url, name, track_id, duration, platform FROM playlist_songs WHERE playlist_id = $1", id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var song Song
+		if err := rows.Scan(&song.URL, &song.Name, &song.TrackID, &song.Duration, &song.Platform); err == nil {
+			playlist.Songs = append(playlist.Songs, song)
+		}
+	}
+	
 	return &playlist, nil
 }
 
-// DeletePlaylist deletes a playlist by its ID.
 func (db *Database) DeletePlaylist(id string, userID int64) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.playlistDB.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
+	_, err := db.Pool.Exec(ctx, "DELETE FROM playlists WHERE id = $1 AND user_id = $2", id, userID)
 	return err
 }
 
@@ -87,21 +91,14 @@ func (db *Database) songExists(id string, trackID string) bool {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	var playlist Playlist
-	err := db.playlistDB.FindOne(ctx, bson.M{"_id": id}).Decode(&playlist)
+	var exists bool
+	err := db.Pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM playlist_songs WHERE playlist_id = $1 AND track_id = $2)", id, trackID).Scan(&exists)
 	if err != nil {
 		return false
 	}
-
-	for _, song := range playlist.Songs {
-		if song.TrackID == trackID {
-			return true
-		}
-	}
-	return false
+	return exists
 }
 
-// AddSongToPlaylist adds a song to a playlist.
 func (db *Database) AddSongToPlaylist(id string, song Song) error {
 	if db.songExists(id, song.TrackID) {
 		return nil
@@ -110,15 +107,12 @@ func (db *Database) AddSongToPlaylist(id string, song Song) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.playlistDB.UpdateOne(
-		ctx,
-		bson.M{"_id": id},
-		bson.M{"$push": bson.M{"songs": song}},
-	)
+	_, err := db.Pool.Exec(ctx, 
+		"INSERT INTO playlist_songs (playlist_id, track_id, url, name, duration, platform) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+		id, song.TrackID, song.URL, song.Name, song.Duration, song.Platform)
 	return err
 }
 
-// RemoveSongFromPlaylist removes a song from a playlist by its track ID.
 func (db *Database) RemoveSongFromPlaylist(id string, trackID string) error {
 	if !db.songExists(id, trackID) {
 		return fmt.Errorf("track with ID %s not found in playlist", trackID)
@@ -127,40 +121,43 @@ func (db *Database) RemoveSongFromPlaylist(id string, trackID string) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.playlistDB.UpdateOne(
-		ctx,
-		bson.M{"_id": id},
-		bson.M{"$pull": bson.M{"songs": bson.M{"track_id": trackID}}},
-	)
-
-	if err != nil {
-		return fmt.Errorf("error removing song: %w", err)
-	}
-
-	return nil
+	_, err := db.Pool.Exec(ctx, "DELETE FROM playlist_songs WHERE playlist_id = $1 AND track_id = $2", id, trackID)
+	return err
 }
 
-// GetUserPlaylists retrieves all playlists for a user.
 func (db *Database) GetUserPlaylists(userID int64) ([]Playlist, error) {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	var playlists []Playlist
-	cursor, err := db.playlistDB.Find(ctx, bson.M{"user_id": userID})
+	rows, err := db.Pool.Query(ctx, "SELECT id, name FROM playlists WHERE user_id = $1", userID)
 	if err != nil {
 		return nil, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		_ = cursor.Close(ctx)
-	}(cursor, ctx)
+	defer rows.Close()
 
-	for cursor.Next(ctx) {
+	var playlists []Playlist
+	for rows.Next() {
 		var playlist Playlist
-		if err := cursor.Decode(&playlist); err != nil {
-			return nil, err
+		playlist.UserID = userID
+		if err := rows.Scan(&playlist.ID, &playlist.Name); err == nil {
+			playlists = append(playlists, playlist)
 		}
-		playlists = append(playlists, playlist)
 	}
+	
+	// Fetch songs for each playlist
+	for i := range playlists {
+		sRows, err := db.Pool.Query(ctx, "SELECT url, name, track_id, duration, platform FROM playlist_songs WHERE playlist_id = $1", playlists[i].ID)
+		if err == nil {
+			for sRows.Next() {
+				var song Song
+				if err := sRows.Scan(&song.URL, &song.Name, &song.TrackID, &song.Duration, &song.Platform); err == nil {
+					playlists[i].Songs = append(playlists[i].Songs, song)
+				}
+			}
+			sRows.Close()
+		}
+	}
+
 	return playlists, nil
 }
 

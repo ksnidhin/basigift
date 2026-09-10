@@ -1,4 +1,4 @@
-module ashokshau/tgmusic
+module simmie
 
 go 1.25.0
 
@@ -7,7 +7,7 @@ require (
 	github.com/amarnathcjd/gogram v1.7.72-0.20260707055139-e3d2247946f8
 	github.com/joho/godotenv v1.5.1
 	github.com/shirou/gopsutil/v3 v3.24.5
-	go.mongodb.org/mongo-driver/v2 v2.8.1
+	github.com/jackc/pgx/v5 v5.5.5
 )
 
 require (

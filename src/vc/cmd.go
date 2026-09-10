@@ -1,8 +1,8 @@
 package vc
 
 import (
-	"ashokshau/tgmusic/src/core/cache"
-	"ashokshau/tgmusic/src/vc/ntgcalls"
+	"simmie/src/core/cache"
+	"simmie/src/vc/ntgcalls"
 	"fmt"
 	"regexp"
 	"strings"

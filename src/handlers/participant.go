@@ -1,5 +1,5 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
@@ -8,10 +8,10 @@
 package handlers
 
 import (
-	"ashokshau/tgmusic/config"
-	"ashokshau/tgmusic/src/core/cache"
-	"ashokshau/tgmusic/src/core/db"
-	"ashokshau/tgmusic/src/vc"
+	"simmie/config"
+	"simmie/src/core/cache"
+	"simmie/src/core/db"
+	"simmie/src/vc"
 	"fmt"
 	"log/slog"
 	"strconv"

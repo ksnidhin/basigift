@@ -1,9 +1,9 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package config
@@ -25,8 +25,10 @@ var (
 	DlBotToken          = os.Getenv("DL_BOT_TOKEN")
 	SessionStrings      = getSessionStrings("STRING", 10)
 	SessionType         = getEnv("SESSION_TYPE", "pyrogram")
-	MongoUri            = os.Getenv("MONGO_URI")
-	DbName              = getEnv("DB_NAME", "Anon")
+	DatabaseUrl         = getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/daddynoah?sslmode=disable")
+	DbMinConns          = getEnvInt32("DB_MIN_CONNS", 2)
+	DbMaxConns          = getEnvInt32("DB_MAX_CONNS", 20)
+	DbMaxConnIdleTime   = getEnv("DB_MAX_CONN_IDLE_TIME", "30m")
 	ApiUrl              = getEnv("API_URL", "https://api.onegrab.fun")
 	ApiKey              = os.Getenv("API_KEY")
 	OwnerId             = getEnvInt64("OWNER_ID", 0)
@@ -175,7 +177,7 @@ func validate() error {
 		{"API_ID", fmt.Sprintf("%d", ApiId), func() bool { return ApiId > 0 }},
 		{"API_HASH", ApiHash, func() bool { return ApiHash != "" }},
 		{"TOKEN", Token, func() bool { return Token != "" }},
-		{"MONGO_URI", MongoUri, func() bool { return MongoUri != "" }},
+		{"DATABASE_URL", DatabaseUrl, func() bool { return DatabaseUrl != "" }},
 		{"OWNER_ID", fmt.Sprintf("%d", OwnerId), func() bool { return OwnerId > 0 }},
 	}
 

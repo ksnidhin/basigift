@@ -1,0 +1,20 @@
+[Unit]
+Description=Daddy Noah Telegram Music Bot
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/DaddyNoah
+ExecStart=/opt/DaddyNoah/daddynoah
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=0
+LimitNOFILE=100000
+EnvironmentFile=/opt/DaddyNoah/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

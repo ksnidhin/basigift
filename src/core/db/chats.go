@@ -1,35 +1,29 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package db
 
 import (
-	"ashokshau/tgmusic/src/utils"
+	"simmie/src/utils"
 	"context"
-	"errors"
 	"log/slog"
-	"time"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	
+	"github.com/jackc/pgx/v5"
 )
 
-// Chats represents a chat document in the database.
 type Chats struct {
-	ID        int64  `bson:"_id"`
-	PlayType  int    `bson:"play_type"`
-	AdminPlay bool   `bson:"admin_play"`
-	AdminMode string `bson:"admin_mode"`
-	CmdDelete bool   `bson:"cmd_delete"`
+	ID        int64
+	PlayType  int
+	AdminPlay bool
+	AdminMode string
+	CmdDelete bool
 }
 
-// getChat retrieves a chat's data from the cache or database.
 func (db *Database) getChat(chatID int64) (*Chats, error) {
 	key := toKey(chatID)
 	if cached, ok := db.chatCache.Get(key); ok {
@@ -37,27 +31,16 @@ func (db *Database) getChat(chatID int64) (*Chats, error) {
 	}
 
 	var chat Chats
-	var err error
-
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	for i := 0; i < 3; i++ {
-		err = db.chatDB.FindOne(ctx, bson.M{"_id": chatID}).Decode(&chat)
-		if err == nil {
-			break
-		}
-		if errors.Is(err, mongo.ErrNoDocuments) {
+	err := db.Pool.QueryRow(ctx, "SELECT id, play_type, admin_play, admin_mode, cmd_delete FROM chats WHERE id = $1", chatID).
+		Scan(&chat.ID, &chat.PlayType, &chat.AdminPlay, &chat.AdminMode, &chat.CmdDelete)
+		
+	if err != nil {
+		if err == pgx.ErrNoRows {
 			return nil, nil
 		}
-
-		if ctx.Err() != nil {
-			return nil, ctx.Err()
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	if err != nil {
 		slog.Info("[DB] An error occurred while getting the chat", "error", err)
 		return nil, err
 	}
@@ -66,24 +49,22 @@ func (db *Database) getChat(chatID int64) (*Chats, error) {
 	return &chat, nil
 }
 
-// AddChat adds a new chat to the database if it does not already exist.
 func (db *Database) AddChat(chatID int64) error {
 	chat, _ := db.getChat(chatID)
 	if chat != nil {
-		return nil // Chat already exists.
+		return nil
 	}
 
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.chatDB.UpdateOne(ctx, bson.M{"_id": chatID}, bson.M{"$setOnInsert": bson.M{}}, options.UpdateOne().SetUpsert(true))
+	_, err := db.Pool.Exec(ctx, "INSERT INTO chats (id) VALUES ($1) ON CONFLICT (id) DO NOTHING", chatID)
 	if err == nil {
 		slog.Info("[DB] A new chat has been added", "id", chatID)
 	}
 	return err
 }
 
-// GetPlayType retrieves the play type setting for a chat.
 func (db *Database) GetPlayType(chatID int64) int {
 	chat, _ := db.getChat(chatID)
 	if chat == nil {
@@ -92,19 +73,19 @@ func (db *Database) GetPlayType(chatID int64) int {
 	return chat.PlayType
 }
 
-// SetPlayType sets the play type for a given chat.
 func (db *Database) SetPlayType(chatID int64, playType int) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.chatDB.UpdateOne(ctx, bson.M{"_id": chatID}, bson.M{"$set": bson.M{"play_type": playType}}, options.UpdateOne().SetUpsert(true))
+	_, err := db.Pool.Exec(ctx, 
+		"INSERT INTO chats (id, play_type) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET play_type = EXCLUDED.play_type", 
+		chatID, playType)
 	if err == nil {
 		db.chatCache.Delete(toKey(chatID))
 	}
 	return err
 }
 
-// GetPlayMode retrieves the play mode for a chat.
 func (db *Database) GetPlayMode(chatID int64) bool {
 	chat, _ := db.getChat(chatID)
 	if chat == nil {
@@ -113,19 +94,19 @@ func (db *Database) GetPlayMode(chatID int64) bool {
 	return chat.AdminPlay
 }
 
-// SetPlayMode sets the play mode for a given chat.
 func (db *Database) SetPlayMode(chatID int64, adminPlay bool) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.chatDB.UpdateOne(ctx, bson.M{"_id": chatID}, bson.M{"$set": bson.M{"admin_play": adminPlay}}, options.UpdateOne().SetUpsert(true))
+	_, err := db.Pool.Exec(ctx, 
+		"INSERT INTO chats (id, admin_play) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET admin_play = EXCLUDED.admin_play", 
+		chatID, adminPlay)
 	if err == nil {
 		db.chatCache.Delete(toKey(chatID))
 	}
 	return err
 }
 
-// GetAdminMode retrieves the admin mode for a chat.
 func (db *Database) GetAdminMode(chatID int64) string {
 	chat, _ := db.getChat(chatID)
 	if chat == nil || chat.AdminMode == "" {
@@ -134,19 +115,19 @@ func (db *Database) GetAdminMode(chatID int64) string {
 	return chat.AdminMode
 }
 
-// SetAdminMode sets the admin mode for a given chat.
 func (db *Database) SetAdminMode(chatID int64, adminMode string) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.chatDB.UpdateOne(ctx, bson.M{"_id": chatID}, bson.M{"$set": bson.M{"admin_mode": adminMode}}, options.UpdateOne().SetUpsert(true))
+	_, err := db.Pool.Exec(ctx, 
+		"INSERT INTO chats (id, admin_mode) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET admin_mode = EXCLUDED.admin_mode", 
+		chatID, adminMode)
 	if err == nil {
 		db.chatCache.Delete(toKey(chatID))
 	}
 	return err
 }
 
-// GetCmdDelete retrieves the command delete setting for a chat.
 func (db *Database) GetCmdDelete(chatID int64) bool {
 	chat, _ := db.getChat(chatID)
 	if chat == nil {
@@ -155,42 +136,37 @@ func (db *Database) GetCmdDelete(chatID int64) bool {
 	return chat.CmdDelete
 }
 
-// SetCmdDelete sets the command delete setting for a given chat.
 func (db *Database) SetCmdDelete(chatID int64, cmdDelete bool) error {
 	ctx, cancel := db.ctx()
 	defer cancel()
 
-	_, err := db.chatDB.UpdateOne(ctx, bson.M{"_id": chatID}, bson.M{"$set": bson.M{"cmd_delete": cmdDelete}}, options.UpdateOne().SetUpsert(true))
+	_, err := db.Pool.Exec(ctx, 
+		"INSERT INTO chats (id, cmd_delete) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET cmd_delete = EXCLUDED.cmd_delete", 
+		chatID, cmdDelete)
 	if err == nil {
 		db.chatCache.Delete(toKey(chatID))
 	}
 	return err
 }
 
-// GetAllChats retrieves a list of all chat IDs from the database.
 func (db *Database) GetAllChats() ([]int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := db.chatDB.Find(ctx, bson.M{})
+	rows, err := db.Pool.Query(ctx, "SELECT id, play_type, admin_play, admin_mode, cmd_delete FROM chats")
 	if err != nil {
 		return nil, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		_ = cursor.Close(ctx)
-	}(cursor, ctx)
+	defer rows.Close()
 
 	var chats []int64
-	for cursor.Next(ctx) {
+	for rows.Next() {
 		var doc Chats
-		if err := cursor.Decode(&doc); err != nil {
+		if err := rows.Scan(&doc.ID, &doc.PlayType, &doc.AdminPlay, &doc.AdminMode, &doc.CmdDelete); err != nil {
 			return nil, err
 		}
 		chats = append(chats, doc.ID)
 		db.chatCache.Set(toKey(doc.ID), &doc)
-	}
-	if err := cursor.Err(); err != nil {
-		return nil, err
 	}
 	return chats, nil
 }

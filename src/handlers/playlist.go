@@ -1,9 +1,9 @@
 /*
- * TgMusicBot - Telegram Music Bot
+ * Daddy Noah - Telegram Music Bot
  *  Copyright (c) 2025-2026 Ashok Shau
  *
  *  Licensed under GNU GPL v3
- *  See https://github.com/AshokShau/TgMusicBot
+ *  See https://github.com/Simmie/DaddyNoah
  */
 
 package handlers
@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"ashokshau/tgmusic/src/core/db"
-	"ashokshau/tgmusic/src/core/dl"
+	"simmie/src/core/db"
+	"simmie/src/core/dl"
 
 	td "github.com/AshokShau/gotdbot"
 )

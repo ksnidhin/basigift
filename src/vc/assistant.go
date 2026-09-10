@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"ashokshau/tgmusic/src/vc/ntgcalls"
+	"simmie/src/vc/ntgcalls"
 
 	tg "github.com/amarnathcjd/gogram/telegram"
 )
