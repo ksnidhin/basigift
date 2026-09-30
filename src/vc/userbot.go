@@ -170,7 +170,7 @@ func (c *TelegramCalls) resolveInviteLink(bot *td.Client, chatID int64, cacheKey
 	)
 
 	if err != nil {
-		return "", fmt.Errorf("create invite link for chat %d: %w", chatID, err)
+		return "", fmt.Errorf("PROMOTE ME OR ADD USERACCOUNT")
 	}
 
 	link := chatLink.InviteLink
@@ -207,6 +207,9 @@ func (c *TelegramCalls) handleJoinError(bot *td.Client, chatID, userID int64, in
 		c.inviteCache.Delete(strconv.FormatInt(chatID, 10))
 		c.UpdateMembership(chatID, userID, &td.ChatMemberStatusLeft{})
 		return fmt.Errorf("client %d: assistant (<code>%d</code>) invite link expired", index, userID)
+
+	case strings.Contains(errMsg, "PROMOTE ME OR ADD USERACCOUNT"):
+		return fmt.Errorf("PROMOTE ME OR ADD USERACCOUNT")
 
 	case strings.Contains(errMsg, "CHANNEL_PRIVATE"):
 		c.inviteCache.Delete(strconv.FormatInt(chatID, 10))

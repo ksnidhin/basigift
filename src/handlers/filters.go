@@ -54,7 +54,6 @@ func adminMode(c *td.Client, m *td.Message) bool {
 
 	chatID := m.ChatId
 
-	if !checkBotAdmin(c, chatID, func(msg string) { _, _ = m.ReplyText(c, msg, nil) }) {
 		return false
 	}
 
@@ -107,10 +106,6 @@ func playMode(c *td.Client, m *td.Message) bool {
 	}
 
 	chatID := m.ChatID()
-
-	if !checkBotAdmin(c, chatID, func(msg string) { _, _ = m.ReplyText(c, msg, nil) }) {
-		return false
-	}
 
 	if db.Instance.GetPlayMode(chatID) {
 		admins, err := cache.GetAdmins(c, chatID, false)

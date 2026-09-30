@@ -54,14 +54,14 @@ var DevsBtn = cb("Devs", "help_devs", gotdbot.ButtonStyleDefault{})
 var PlaylistBtn = cb("Playlist", "help_playlist", gotdbot.ButtonStyleDefault{})
 var AutoplayBtn = cb("Autoplay", "help_autoplay", gotdbot.ButtonStyleDefault{})
 
-var SourceCodeBtn = url("Source Code", "https://github.com/Simmie/DaddyNoah", gotdbot.ButtonStylePrimary{})
-var channelBtn = url("Updates", config.SupportChannel, gotdbot.ButtonStyleDefault{})
-var groupBtn = url("Group", config.SupportGroup, gotdbot.ButtonStyleDefault{})
+
+
+var creditsBtn = url("Developer", "https://t.me/morevicodin", gotdbot.ButtonStyleDefault{})
 
 func SupportKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
-			{channelBtn, groupBtn},
+			{creditsBtn},
 			{CloseBtn},
 		},
 	}
@@ -70,7 +70,7 @@ func SupportKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 func SupportBtn() *gotdbot.ReplyMarkupInlineKeyboard {
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
-			{channelBtn, groupBtn},
+			{creditsBtn},
 		},
 	}
 }
@@ -133,7 +133,7 @@ func BackHelpMenuKeyboard() *gotdbot.ReplyMarkupInlineKeyboard {
 	return &gotdbot.ReplyMarkupInlineKeyboard{
 		Rows: [][]gotdbot.InlineKeyboardButton{
 			{HelpBtn, HomeBtn},
-			{CloseBtn, SourceCodeBtn},
+			{CloseBtn},
 		},
 	}
 }
@@ -210,8 +210,8 @@ func AddMeMarkup(username string) *gotdbot.ReplyMarkupInlineKeyboard {
 		Rows: [][]gotdbot.InlineKeyboardButton{
 			{addMeBtn},
 			{HelpBtn},
-			{channelBtn, groupBtn},
-			{SourceCodeBtn},
+			{creditsBtn},
+			
 		},
 	}
 }
