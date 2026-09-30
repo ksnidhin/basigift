@@ -54,9 +54,6 @@ func adminMode(c *td.Client, m *td.Message) bool {
 
 	chatID := m.ChatId
 
-		return false
-	}
-
 	userID := m.SenderID()
 	switch db.Instance.GetAdminMode(chatID) {
 	case utils.Everyone:
