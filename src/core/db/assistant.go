@@ -81,7 +81,7 @@ func (db *Database) AssignAssistant(chatID int64, proposedAssistant int) (int, e
 	err = tx.QueryRow(ctx, "SELECT num FROM assistants WHERE chat_id = $1 FOR UPDATE", chatID).Scan(&num)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ÿ, errx := tx.Exec(ctx, "INSERT INTO assistants (chat_id, num) VALUES ($1, $2)", chatID, proposedAssistant)
+			_, errx := tx.Exec(ctx, "INSERT INTO assistants (chat_id, num) VALUES ($1, $2)", chatID, proposedAssistant)
 			if errx == nil {
 				tx.Commit(ctx)
 				db.assistantCache.Set(toKey(chatID), proposedAssistant)
