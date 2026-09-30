@@ -51,6 +51,7 @@ cp -a "$REPO_DIR"/. /opt/DaddyNoah/
 cd /opt/DaddyNoah
 
 go mod tidy
+go run setup_ntgcalls.go
 go build -o daddynoah .
 
 echo "[6/6] Setting up systemd service..."
