@@ -125,9 +125,18 @@ func (c *TelegramCalls) checkUserStats(bot *td.Client, chatID int64, call *Assis
 	member, err := bot.GetChatMember(chatID, td.MessageSenderUser{UserId: userID})
 	if err != nil {
 		errStr := err.Error()
-		if strings.Contains(errStr, "USER_NOT_PARTICIPANT") {
+				if strings.Contains(errStr, "USER_NOT_PARTICIPANT") {
 			c.UpdateMembership(chatID, userID, &td.ChatMemberStatusLeft{})
 			return &td.ChatMemberStatusLeft{}, nil
+		}
+
+		if strings.Contains(errStr, "CHAT_ADMIN_REQUIRED") {
+			_, peerErr := call.App.ResolvePeer(chatID)
+			if peerErr != nil {
+				return nil, fmt.Errorf("PROMOTE ME OR ADD USERACCOUNT")
+			}
+			c.UpdateMembership(chatID, userID, &td.ChatMemberStatusMember{})
+			return &td.ChatMemberStatusMember{}, nil
 		}
 
 		return nil, fmt.Errorf("GetChatMember (client %d) chat=%d user=%d: %w", index, chatID, userID, err)
