@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"it/config"
+	"simmie/config"
 	"simmie/src/core/cache"
 
 	"github.com/jackc/pgx/v5"
