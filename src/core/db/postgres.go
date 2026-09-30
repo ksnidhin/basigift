@@ -20,7 +20,6 @@ import (
 	"simmie/config"
 	"simmie/src/core/cache"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,8 +27,7 @@ type Database struct {
 	Pool *pgxpool.Pool
 
 	chatCache      *cache.Cache[*Chats]
-	userCache      *cache.Cache[
-Users]
+	userCache      *cache.Cache[*Users]
 	assistantCache *cache.Cache[int]
 	authCache      *cache.Cache[[]int64]
 	langCache      *cache.Cache[string]

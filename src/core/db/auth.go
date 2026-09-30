@@ -10,7 +10,6 @@ package db
 
 import (
 	"simmie/src/core/cache"
-	"github.com/jackc/pgx/v5"
 )
 
 func (db *Database) AddAuthUser(chatID, userID int64) error {
