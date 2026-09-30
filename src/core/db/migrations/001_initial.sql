@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS chats (
     id BIGINT PRIMARY KEY,
     play_type INT NOT NULL DEFAULT 0,
     admin_play BOOLEAN NOT NULL DEFAULT FALSE,
-    admin_mode VARCHAR(50) NOT NULL DEFAULT \'everyone\',
+    admin_mode VARCHAR(50) NOT NULL DEFAULT 'everyone',
     cmd_delete BOOLEAN NOT NULL DEFAULT FALSE
 );
 
