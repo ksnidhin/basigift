@@ -9,8 +9,7 @@
 package core
 
 import (
-	"simmie/config"
-	"simmie/src/utils"
+		"simmie/src/utils"
 	"fmt"
 
 	"github.com/AshokShau/gotdbot"
