@@ -130,11 +130,7 @@ func (c *TelegramCalls) checkUserStats(bot *td.Client, chatID int64, call *Assis
 			return &td.ChatMemberStatusLeft{}, nil
 		}
 
-		if strings.Contains(errStr, "CHAT_ADMIN_REQUIRED") {
-			_, peerErr := call.App.ResolvePeer(chatID)
-			if peerErr != nil {
-				return nil, fmt.Errorf("PROMOTE ME OR ADD USERACCOUNT")
-			}
+				if strings.Contains(errStr, "CHAT_ADMIN_REQUIRED") {
 			c.UpdateMembership(chatID, userID, &td.ChatMemberStatusMember{})
 			return &td.ChatMemberStatusMember{}, nil
 		}

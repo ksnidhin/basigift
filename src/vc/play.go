@@ -26,7 +26,9 @@ func classifyError(err error) errorKind {
 	switch {
 	case strings.Contains(msg, "is closed"),
 		strings.Contains(msg, "GROUPCALL_FORBIDDEN"),
-		strings.Contains(msg, "PROMOTE ME OR ADD USERACCOUNT"):
+		strings.Contains(msg, "PROMOTE ME OR ADD USERACCOUNT"),
+		strings.Contains(msg, "PEER_ID_INVALID"),
+		strings.Contains(msg, "CHANNEL_PRIVATE"):
 		return errFatal
 	case strings.Contains(msg, "GROUPCALL_INVALID"):
 		return errFatal
@@ -47,7 +49,7 @@ func fatalMessage(err error) error {
 		return errors.New("<b>No active video chat found.</b>\n\nPlease start one and <b>try again</b>")
 	}
 
-	if strings.Contains(msg, "PROMOTE ME OR ADD USERACCOUNT") {
+	if strings.Contains(msg, "PROMOTE ME OR ADD USERACCOUNT") || strings.Contains(msg, "PEER_ID_INVALID") || strings.Contains(msg, "CHANNEL_PRIVATE") {
 		return errors.New("PROMOTE ME OR ADD USERACCOUNT")
 	}
 
