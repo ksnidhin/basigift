@@ -112,3 +112,19 @@ func truncate(s string, max int) string {
 	}
 	return s[:max]
 }
+
+func editOrSend(c *td.Client, chatID int64, updater *td.Message, text string, opts *td.EditTextMessageOpts) (*td.Message, error) {
+	msg, err := updater.EditText(c, text, opts)
+	if err != nil {
+		var sendOpts *td.SendTextMessageOpts
+		if opts != nil {
+			sendOpts = &td.SendTextMessageOpts{
+				ReplyMarkup:           opts.ReplyMarkup,
+				ParseMode:             opts.ParseMode,
+				DisableWebPagePreview: opts.DisableWebPagePreview,
+			}
+		}
+		return c.SendTextMessage(chatID, text, sendOpts)
+	}
+	return msg, nil
+}

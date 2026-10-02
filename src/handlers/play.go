@@ -150,18 +150,18 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool, force bool) error {
 	wrapper := dl.NewDownloaderWrapper(input)
 	if url != "" {
 		if !wrapper.IsValid() {
-			_, _ = updater.EditText(c, "Invalid URL or unsupported platform.\n\n<b>Supported Platforms:</b>\n- YouTube\n- Spotify\n- JioSaavn\n- Apple Music", &td.EditTextMessageOpts{ReplyMarkup: core.SupportKeyboard(), ParseMode: "HTML"})
+			_, _ = editOrSend(c, updater.ChatId, updater, "Invalid URL or unsupported platform.\n\n<b>Supported Platforms:</b>\n- YouTube\n- Spotify\n- JioSaavn\n- Apple Music", &td.EditTextMessageOpts{ReplyMarkup: core.SupportKeyboard(), ParseMode: "HTML"})
 			return td.EndGroups
 		}
 
 		trackInfo, err := wrapper.GetInfo()
 		if err != nil {
-			_, _ = updater.EditText(c, fmt.Sprintf("❌ Error fetching track info: %s", err.Error()), nil)
+			_, _ = editOrSend(c, updater.ChatId, updater, fmt.Sprintf("❌ Error fetching track info: %s", err.Error()), nil)
 			return td.EndGroups
 		}
 
 		if trackInfo.Results == nil || len(trackInfo.Results) == 0 {
-			_, _ = updater.EditText(c, "No tracks found.", nil)
+			_, _ = editOrSend(c, updater.ChatId, updater, "No tracks found.", nil)
 			return td.EndGroups
 		}
 
@@ -175,12 +175,12 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool, force bool) error {
 func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Message, chatId int64, isVideo bool, force bool) error {
 	file, fileName := getFile(dlMsg)
 	if file == nil {
-		_, err := updater.EditText(c, "No valid media found in the message.", nil)
+		_, err := editOrSend(c, updater.ChatId, updater, "No valid media found in the message.", nil)
 		return err
 	}
 
 	if file.Size > config.MaxFileSize {
-		_, err := updater.EditText(c, fmt.Sprintf("File too large. Max size: %d MB.", config.MaxFileSize/(1024*1024)), nil)
+		_, err := editOrSend(c, updater.ChatId, updater, fmt.Sprintf("File too large. Max size: %d MB.", config.MaxFileSize/(1024*1024)), nil)
 		if err != nil {
 			c.Logger.Warn("Edit message failed", "error", err)
 		}
@@ -189,7 +189,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 
 	fileId := dlMsg.RemoteFileID()
 	if _track := cache.ChatCache.GetTrackIfExists(chatId, fileId); _track != nil {
-		_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+		_, err := editOrSend(c, updater.ChatId, updater, "Track already in queue or playing.", nil)
 		return err
 	}
 
@@ -225,14 +225,14 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 			"<u><b>Added to queue: %d</b></u>\n\n<b>Title:</b> <a href='%s'>%s</a>\n\n<b>Duration:</b> %s min\n<b>Requested by:</b> %s",
 			qLen, escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 		)
-		_, err := updater.EditText(c, queueInfo, &td.EditTextMessageOpts{ReplyMarkup: core.QueueMarkup(saveCache.TrackID), ParseMode: "HTML", DisableWebPagePreview: true})
+		_, err := editOrSend(c, updater.ChatId, updater, queueInfo, &td.EditTextMessageOpts{ReplyMarkup: core.QueueMarkup(saveCache.TrackID), ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
 	}
 
 	file, err = dlMsg.Download(c, 1, 0, 0, true)
 	if err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
-		_, err = updater.EditText(c, fmt.Sprintf("Download failed: %s", err.Error()), nil)
+		_, err = editOrSend(c, updater.ChatId, updater, fmt.Sprintf("Download failed: %s", err.Error()), nil)
 		return err
 	}
 
@@ -246,7 +246,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 
 	if err = vc.Calls.PlayMedia(c, chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
-		_, err = updater.EditText(c, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
+		_, err = editOrSend(c, updater.ChatId, updater, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
 	}
 
@@ -259,7 +259,7 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 		escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 	)
 
-	_, err = updater.EditText(c, nowPlaying, &td.EditTextMessageOpts{
+	_, err = editOrSend(c, updater.ChatId, updater, nowPlaying, &td.EditTextMessageOpts{
 		ParseMode:             "HTML",
 		ReplyMarkup:           core.ControlButtons("play"),
 		DisableWebPagePreview: true,
@@ -272,18 +272,18 @@ func handleMedia(c *td.Client, m *td.Message, updater *td.Message, dlMsg *td.Mes
 func handleTextSearch(c *td.Client, m *td.Message, updater *td.Message, wrapper *dl.DownloaderWrapper, chatId int64, isVideo bool, force bool) error {
 	searchResult, err := wrapper.Search()
 	if err != nil {
-		_, err = updater.EditText(c, fmt.Sprintf("❌ Search failed: %s", err.Error()), nil)
+		_, err = editOrSend(c, updater.ChatId, updater, fmt.Sprintf("❌ Search failed: %s", err.Error()), nil)
 		return err
 	}
 
 	if searchResult.Results == nil || len(searchResult.Results) == 0 {
-		_, err = updater.EditText(c, "😕 No results found. Try a different query.", nil)
+		_, err = editOrSend(c, updater.ChatId, updater, "😕 No results found. Try a different query.", nil)
 		return err
 	}
 
 	song := searchResult.Results[0]
 	if _track := cache.ChatCache.GetTrackIfExists(chatId, song.Id); _track != nil {
-		_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+		_, err := editOrSend(c, updater.ChatId, updater, "Track already in queue or playing.", nil)
 		return err
 	}
 
@@ -295,7 +295,7 @@ func handleUrl(c *td.Client, m *td.Message, updater *td.Message, trackInfo utils
 	if len(trackInfo.Results) == 1 {
 		track := trackInfo.Results[0]
 		if _track := cache.ChatCache.GetTrackIfExists(chatId, track.Id); _track != nil {
-			_, err := updater.EditText(c, "Track already in queue or playing.", nil)
+			_, err := editOrSend(c, updater.ChatId, updater, "Track already in queue or playing.", nil)
 			return err
 		}
 		return handleSingleTrack(c, m, updater, track, "", chatId, isVideo, force)
@@ -307,7 +307,7 @@ func handleUrl(c *td.Client, m *td.Message, updater *td.Message, trackInfo utils
 // handleSingleTrack handles a single track.
 func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song utils.MusicTrack, filePath string, chatId int64, isVideo bool, force bool) error {
 	if song.Duration > int(config.SongDurationLimit) {
-		_, err := updater.EditText(c, fmt.Sprintf("Sorry, song exceeds max duration of %d minutes.", config.SongDurationLimit/60), nil)
+		_, err := editOrSend(c, updater.ChatId, updater, fmt.Sprintf("Sorry, song exceeds max duration of %d minutes.", config.SongDurationLimit/60), nil)
 		return err
 	}
 
@@ -338,7 +338,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 			qLen, escURL, escName, utils.SecToMin(saveCache.Duration), escUser,
 		)
 
-		_, err := updater.EditText(c, queueInfo, &td.EditTextMessageOpts{ReplyMarkup: core.QueueMarkup(saveCache.TrackID), ParseMode: "HTML", DisableWebPagePreview: true})
+		_, err := editOrSend(c, updater.ChatId, updater, queueInfo, &td.EditTextMessageOpts{ReplyMarkup: core.QueueMarkup(saveCache.TrackID), ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
 	}
 
@@ -346,7 +346,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 		dlResult, err := dl.DownloadCachedTrack(&saveCache, c)
 		if err != nil {
 			cache.ChatCache.RemoveCurrentSong(chatId)
-			_, err = updater.EditText(c, fmt.Sprintf("Download failed: %s", err.Error()), nil)
+			_, err = editOrSend(c, updater.ChatId, updater, fmt.Sprintf("Download failed: %s", err.Error()), nil)
 			return err
 		}
 
@@ -355,7 +355,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 
 	if err := vc.Calls.PlayMedia(c, chatId, saveCache.FilePath, saveCache.IsVideo, ""); err != nil {
 		cache.ChatCache.RemoveCurrentSong(chatId)
-		_, err = updater.EditText(c, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
+		_, err = editOrSend(c, updater.ChatId, updater, err.Error(), &td.EditTextMessageOpts{ParseMode: "HTML", DisableWebPagePreview: true})
 		return err
 	}
 
@@ -368,7 +368,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 		escURLnp, escNamenp, utils.SecToMin(song.Duration), escUsernp,
 	)
 
-	_, err := updater.EditText(c, nowPlaying, &td.EditTextMessageOpts{
+	_, err := editOrSend(c, updater.ChatId, updater, nowPlaying, &td.EditTextMessageOpts{
 		ReplyMarkup:           core.ControlButtons("play"),
 		ParseMode:             "HTML",
 		DisableWebPagePreview: true,
@@ -385,7 +385,7 @@ func handleSingleTrack(c *td.Client, m *td.Message, updater *td.Message, song ut
 // handleMultipleTracks handles multiple tracks.
 func handleMultipleTracks(c *td.Client, m *td.Message, updater *td.Message, tracks []utils.MusicTrack, chatId int64, isVideo bool, force bool) error {
 	if len(tracks) == 0 {
-		_, err := updater.EditText(c, "No tracks found.", nil)
+		_, err := editOrSend(c, updater.ChatId, updater, "No tracks found.", nil)
 		return err
 	}
 
@@ -412,10 +412,10 @@ func handleMultipleTracks(c *td.Client, m *td.Message, updater *td.Message, trac
 
 	if len(tracksToAdd) == 0 {
 		if len(skippedTracks) > 0 {
-			_, err := updater.EditText(c, fmt.Sprintf("All tracks were skipped (max duration %d min).", config.SongDurationLimit/60), nil)
+			_, err := editOrSend(c, updater.ChatId, updater, fmt.Sprintf("All tracks were skipped (max duration %d min).", config.SongDurationLimit/60), nil)
 			return err
 		}
-		_, err := updater.EditText(c, "No valid tracks found.", nil)
+		_, err := editOrSend(c, updater.ChatId, updater, "No valid tracks found.", nil)
 		return err
 	}
 
@@ -478,7 +478,7 @@ func handleMultipleTracks(c *td.Client, m *td.Message, updater *td.Message, trac
 		_ = vc.Calls.PlayNext(c, chatId)
 	}
 
-	_, err := updater.EditText(c, fullMessage, &td.EditTextMessageOpts{
+	_, err := editOrSend(c, updater.ChatId, updater, fullMessage, &td.EditTextMessageOpts{
 		ParseMode:             "HTML",
 		ReplyMarkup:           core.QueueMarkup(tracksToAdd[0].TrackID),
 		DisableWebPagePreview: true,
