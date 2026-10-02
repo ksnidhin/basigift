@@ -21,7 +21,7 @@ func getMediaDescription(filePath string, isVideo bool, chatId int64, ffmpegPara
 	audioDescription := &ntgcalls.AudioDescription{
 		MediaSource:  ntgcalls.MediaSourceShell,
 		SampleRate:   48000,
-		ChannelCount: 2,
+		ChannelCount: 1,
 	}
 
 	quotedPath := fmt.Sprintf("\"%s\"", filePath)
