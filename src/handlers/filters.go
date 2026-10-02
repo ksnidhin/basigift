@@ -52,8 +52,9 @@ func adminMode(c *td.Client, m *td.Message) bool {
 		return false
 	}
 
-	chatID := m.ChatId
+		chatID := m.ChatId
 
+	_, _ = cache.GetAdmins(c, chatID, false)
 	userID := m.SenderID()
 	switch db.Instance.GetAdminMode(chatID) {
 	case utils.Everyone:
@@ -76,11 +77,7 @@ func adminModeCB(c *td.Client, cb *td.UpdateNewCallbackQuery) bool {
 	}
 
 	chatID := cb.ChatId
-
-	if !checkBotAdmin(c, chatID, func(msg string) { _ = cb.Answer(c, 0, true, msg, "") }) {
-		return false
-	}
-
+	_, _ = cache.GetAdmins(c, chatID, false)
 	userID := cb.SenderUserId
 	switch db.Instance.GetAdminMode(chatID) {
 	case utils.Everyone:
