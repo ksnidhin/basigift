@@ -21,7 +21,7 @@ func getMediaDescription(filePath string, isVideo bool, chatId int64, ffmpegPara
 	audioDescription := &ntgcalls.AudioDescription{
 		MediaSource:  ntgcalls.MediaSourceShell,
 		SampleRate:   48000,
-		ChannelCount: 1,
+		ChannelCount: 2,
 	}
 
 	quotedPath := fmt.Sprintf("\"%s\"", filePath)
@@ -48,7 +48,7 @@ func getMediaDescription(filePath string, isVideo bool, chatId int64, ffmpegPara
 		audioCmd.WriteString(seekFlags + " ")
 	}
 
-	audioCmd.WriteString("-i " + quotedPath + " ")
+	audioCmd.WriteString("-re -i " + quotedPath + " ")
 
 	if filterFlags != "" {
 		audioCmd.WriteString(filterFlags + " ")
@@ -112,7 +112,7 @@ func getMediaDescription(filePath string, isVideo bool, chatId int64, ffmpegPara
 		videoCmd.WriteString(seekFlags + " ")
 	}
 
-	videoCmd.WriteString("-i " + quotedPath + " ")
+	videoCmd.WriteString("-re -i " + quotedPath + " ")
 
 	if filterFlags != "" {
 		videoCmd.WriteString(filterFlags + " ")
