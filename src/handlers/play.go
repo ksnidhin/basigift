@@ -139,8 +139,11 @@ func handlePlay(c *td.Client, m *td.Message, isVideo bool, force bool) error {
 
 	updater, err := m.ReplyText(c, "🔍 Searching and downloading...", nil)
 	if err != nil {
-		c.Logger.Warn("failed to send message", "error", err)
-		return td.EndGroups
+		c.Logger.Warn("failed to reply, sending without reply", "error", err)
+		updater, err = c.SendTextMessage(chatID, "🔍 Searching and downloading...", nil)
+		if err != nil {
+			return td.EndGroups
+		}
 	}
 
 	if isReply && isValidMedia(rMsg) {
